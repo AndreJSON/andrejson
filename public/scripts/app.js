@@ -12,6 +12,9 @@ app.config(function ($routeProvider) {
 		.when('/home', {
 			templateUrl: 'views/home.html'
 		})
+		.when('/about-me', {
+			templateUrl: 'views/about-me.html'
+		})
 		.otherwise({
 			templateUrl: 'views/404.html'
 		});
