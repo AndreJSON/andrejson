@@ -3,32 +3,42 @@
 	<head>
 		<title>André Josefsson</title>
 		<meta charset="utf-8">
-		<!----- CDN JS ----->
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.2/angular.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.2/angular-route.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.2/angular-animate.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.2/angular-aria.min.js"></script>
+		<!-- CDN JS -->
+		<script src="/angular/angular.min.js"></script>
+		<script src="/angular-route/angular-route.min.js"></script>
+		<script src="/angular-animate/angular-animate.min.js"></script>
+		<script src="/angular-aria/angular-aria.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc6/angular-material.min.js"></script>
-		<!----- MY JS ----->
+		<script src="/angular-material-icons/angular-material-icons.min.js"></script>
+		<!-- MY JS -->
 		<script src="scripts/app.js"></script>
 		<script src="scripts/controllers/main-controller.js"></script>
 		<script src="scripts/controllers/sidenav-controller.js"></script>
-		<!----- CSS ----->
+		<script src="scripts/controllers/toolbar-controller.js"></script>
+		<!-- CDN CSS -->
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc6/angular-material.min.css">
+		<link rel="stylesheet" href="/angular-material-icons/angular-material-icons.css">
 	</head>
-	<body ng-app="app" ng-controller="mainController" layout="row" flex>
+	
+	<body ng-app="app" ng-controller="mainController" layout="column" flex>
+		
+		<md-toolbar class="md-whiteframe-z2" ng-controller="toolbarController" layout="row">
+			<md-button class="aj-menu-button" aria-label="Open" ng-click="openLeft()">
+				<ng-md-icon icon="menu" size="24"></ng-md-icon>
+			</md-button>
+			<h1 class="md-toolbar-tools">Home</h1>
+		</md-toolbar>
+		
 		<md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left">
-			<md-toolbar class="md-theme-indigo"></md-toolbar>
-			<md-content ng-controller="sidenavController">
-				<md-button ng-click="closeLeft()" class="md-primary">
-					Toggle sidebar
+			<md-toolbar class="md-theme-indigo" ng-controller="sidenavController" layout="row" layout-align="end">
+				<md-button class="aj-menu-button" aria-label="Close" ng-click="closeLeft()">
+					<ng-md-icon icon="keyboard_arrow_left" size="24"></ng-md-icon>
 				</md-button>
-			</md-content>
+			</md-toolbar>
 		</md-sidenav>
-		<md-button ng-click="openLeft()" ng-hide="isOpenLeft()" class="md-primary">
-			Toggle sidebar
-		</md-button>
-		<section ng-view flex>
-		</section>
+		
+		<div ng-view flex>
+		</div>
+		
 	</body>
 </html>

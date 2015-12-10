@@ -1,6 +1,6 @@
 /*global angular */
 
-var app = angular.module('app', ['ngMaterial', 'ngRoute']);
+var app = angular.module('app', ['ngMaterial', 'ngRoute', 'ngMdIcons']);
 
 app.config(function ($routeProvider) {
 	'use strict';
