@@ -11,11 +11,24 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc6/angular-material.min.js"></script>
 		<!----- MY JS ----->
 		<script src="scripts/app.js"></script>
+		<script src="scripts/controllers/main-controller.js"></script>
+		<script src="scripts/controllers/sidenav-controller.js"></script>
 		<!----- CSS ----->
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc6/angular-material.min.css"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc6/angular-material.min.css">
 	</head>
-	<body ng-app="app">
-		<p>Name : <input type="text" ng-model="name"></p>
-		<h1>Hello World, my name is {{name}}</h1>
+	<body ng-app="app" ng-controller="mainController" layout="row" flex>
+		<md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left">
+			<md-toolbar class="md-theme-indigo"></md-toolbar>
+			<md-content ng-controller="sidenavController">
+				<md-button ng-click="closeLeft()" class="md-primary">
+					Toggle sidebar
+				</md-button>
+			</md-content>
+		</md-sidenav>
+		<md-button ng-click="openLeft()" ng-hide="isOpenLeft()" class="md-primary">
+			Toggle sidebar
+		</md-button>
+		<section ng-view flex>
+		</section>
 	</body>
 </html>
