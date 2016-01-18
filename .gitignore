@@ -1,2 +1,5 @@
 #node modules
 node_modules/
+
+#cache files for sass compilation
+css/.sass-cache/
