@@ -1,8 +1,9 @@
-/*global app*/
+/*global angular*/
 
-app.controller('toolbarController', function ($scope, $log, $mdSidenav) {
-	'use strict';
-	$scope.openLeft = function () {
-		$mdSidenav('left').open();
-	};
-});
+angular.module('andrejson')
+	.controller('toolbarController', function ($scope, $log, $mdSidenav) {
+		'use strict';
+		$scope.openLeft = function () {
+			$mdSidenav('left').open();
+		};
+	});

@@ -1,5 +1,6 @@
-/*global app*/
+/*global angular*/
 
-app.controller('mainController', function ($scope, $log, $mdSidenav) {
-	'use strict';
-});
+angular.module('andrejson')
+	.controller('mainController', function ($scope, $log, $mdSidenav) {
+		'use strict';
+	});
