@@ -5,4 +5,4 @@ node_modules/
 css/.sass-cache/
 
 #generated css file should not be synced, only the scss-files
-css/stylesheet/*.css
+css/stylesheets/*.css
