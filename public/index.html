@@ -26,15 +26,24 @@
 			<md-button class="aj-menu-button" aria-label="Open" ng-click="openLeft()">
 				<ng-md-icon icon="menu" size="24"></ng-md-icon>
 			</md-button>
-			<h1 class="md-toolbar-tools">Home</h1>
+			<h1 class="md-toolbar-tools">{{getPath()}}</h1>
 		</md-toolbar>
 		
 		<md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left">
-			<md-toolbar class="aj-toolbar" ng-controller="sidenavController" layout="row" layout-align="end">
-				<md-button class="aj-menu-button" aria-label="Close" ng-click="closeLeft()">
-					<ng-md-icon icon="keyboard_arrow_left" size="24"></ng-md-icon>
-				</md-button>
-			</md-toolbar>
+			<div  ng-controller="sidenavController">
+				<md-toolbar class="aj-toolbar" layout="row" layout-align="end">
+					<md-button class="aj-menu-button" aria-label="Close" ng-click="closeLeft()">
+						<ng-md-icon icon="keyboard_arrow_left" size="24"></ng-md-icon>
+					</md-button>
+				</md-toolbar>
+				<md-content>
+					<md-list>
+						<md-item ng-repeat="view in views">
+							<md-button href="#/{{view}}">{{view}}</md-button>
+						</md-item>
+					</md-list>
+				</md-content>
+			</div>
 		</md-sidenav>
 		
 		<div ng-view flex>
