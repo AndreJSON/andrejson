@@ -11,18 +11,18 @@
 		<script src="/angular-material/angular-material.min.js"></script>
 		<script src="/angular-material-icons/angular-material-icons.min.js"></script>
 		<!-- MY JS -->
-		<script src="scripts/app.js"></script>
-		<script src="scripts/controllers/main-controller.js"></script>
-		<script src="scripts/controllers/sidenav-controller.js"></script>
-		<script src="scripts/controllers/toolbar-controller.js"></script>
+		<script src="/scripts/app.js"></script>
+		<script src="/scripts/controllers/main-controller.js"></script>
+		<script src="/scripts/controllers/sidenav-controller.js"></script>
+		<script src="/scripts/controllers/toolbar-controller.js"></script>
 		<!-- CSS -->
-		<link rel="stylesheet" href="/stylesheets/style.css">
 		<link rel="stylesheet" href="/angular-material-icons/angular-material-icons.css">
+		<link rel="stylesheet" href="/stylesheets/style.css">
 	</head>
 	
 	<body ng-app="app" ng-controller="mainController" layout="column" flex>
 		
-		<md-toolbar class="md-whiteframe-z2" ng-controller="toolbarController" layout="row">
+		<md-toolbar class="aj-toolbar md-whiteframe-z2" ng-controller="toolbarController" layout="row">
 			<md-button class="aj-menu-button" aria-label="Open" ng-click="openLeft()">
 				<ng-md-icon icon="menu" size="24"></ng-md-icon>
 			</md-button>
@@ -30,7 +30,7 @@
 		</md-toolbar>
 		
 		<md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left">
-			<md-toolbar class="md-theme-indigo" ng-controller="sidenavController" layout="row" layout-align="end">
+			<md-toolbar class="aj-toolbar" ng-controller="sidenavController" layout="row" layout-align="end">
 				<md-button class="aj-menu-button" aria-label="Close" ng-click="closeLeft()">
 					<ng-md-icon icon="keyboard_arrow_left" size="24"></ng-md-icon>
 				</md-button>
