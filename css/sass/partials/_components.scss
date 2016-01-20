@@ -1,0 +1,8 @@
+body {
+	@include linear-gradient(rgb(230,231,231), rgb(232,236,236));
+}
+
+h1, h2, h3, h4, h5, h6, p {
+	font-weight: 500;
+	opacity: 0.87;
+}

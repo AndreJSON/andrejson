@@ -1,0 +1,6 @@
+@mixin linear-gradient($color1, $color2) {
+	background: -webkit-linear-gradient(270deg,$color1 0%,$color2 100%);
+	background: -moz-linear-gradient(270deg,$color1 0%,$color2 100%);
+	background: -ms-linear-gradient(270deg,$color1 0%,$color2 100%);
+	background: linear-gradient(270deg,$color1 0%,$color2 100%);
+}
