@@ -38,9 +38,9 @@
 					</md-toolbar>
 					<md-content>
 						<md-list>
-							<md-list-item class="aj-sidenav-list-item" ng-repeat="view in viewsData.names">
-								<md-button class="aj-sidenav-button" href="#/{{view}}">
-									<h2 class="aj-sidenav-button-text">{{view}}</h2>
+							<md-list-item class="aj-sidenav-list-item" ng-repeat="view in viewsData.views">
+								<md-button class="aj-sidenav-button" href="#{{view.hash}}">
+									<h2 class="aj-sidenav-button-text">{{view.name}}</h2>
 								</md-button>
 								<md-divider></md-divider>
 							</md-list-item>

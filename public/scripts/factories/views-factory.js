@@ -9,12 +9,7 @@ angular.module('andrejson')
 			views: [
 				{hash: '/home', name: 'Home'},
 				{hash: '/about-me', name: 'About Me'}
-			],
-			names: []
+			]
 		};
-		function addToNames(element) {
-			data.names.push(element.name);
-		}
-		data.views.forEach(addToNames); //Generate data.names for O(1) future use.
 		return data;
 	});
