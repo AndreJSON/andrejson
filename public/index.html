@@ -20,38 +20,36 @@
 		<link rel="stylesheet" href="/stylesheets/style.css">
 	</head>
 	
-	<body ng-app="andrejson" ng-controller="mainController" layout="column" flex>
-		
+	<body ng-app="andrejson" ng-controller="mainController" layout="column">
 		<md-toolbar class="aj-toolbar md-whiteframe-z2" ng-controller="toolbarController" layout="row">
 			<md-button class="aj-menu-button" aria-label="Open" ng-click="openLeft()">
 				<ng-md-icon icon="menu" size="24"></ng-md-icon>
 			</md-button>
 			<h1 class="md-toolbar-tools">{{getPath()}}</h1>
 		</md-toolbar>
-		
-		<md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left">
-			<div  ng-controller="sidenavController">
-				<md-toolbar class="aj-toolbar" layout="row" layout-align="end">
-					<md-button class="aj-menu-button" aria-label="Close" ng-click="closeLeft()">
-						<ng-md-icon icon="keyboard_arrow_left" size="24"></ng-md-icon>
-					</md-button>
-				</md-toolbar>
-				<md-content>
-					<md-list>
-						<md-list-item class="aj-sidenav-list-item" ng-repeat="view in views">
-							<md-button class="aj-sidenav-button" href="#/{{view}}">
-								<h2 class="aj-sidenav-button-text">{{view}}</h2>
-							</md-button>
-							<md-divider></md-divider>
-						</md-list-item>
-						<div></div>
-					</md-list>
-				</md-content>
+		<md-content>
+			<md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left">
+				<div  ng-controller="sidenavController">
+					<md-toolbar class="aj-toolbar" layout="row" layout-align="end">
+						<md-button class="aj-menu-button" aria-label="Close" ng-click="closeLeft()">
+							<ng-md-icon icon="keyboard_arrow_left" size="24"></ng-md-icon>
+						</md-button>
+					</md-toolbar>
+					<md-content>
+						<md-list>
+							<md-list-item class="aj-sidenav-list-item" ng-repeat="view in views">
+								<md-button class="aj-sidenav-button" href="#/{{view}}">
+									<h2 class="aj-sidenav-button-text">{{view}}</h2>
+								</md-button>
+								<md-divider></md-divider>
+							</md-list-item>
+							<div></div>
+						</md-list>
+					</md-content>
+				</div>
+			</md-sidenav>
+			<div ng-view>
 			</div>
-		</md-sidenav>
-		
-		<div ng-view layout="column" flex>
-		</div>
-		
+		</md-content>
 	</body>
 </html>
