@@ -1,13 +1,10 @@
 /*global angular*/
 
 angular.module('andrejson')
-	.controller('sidenavController', function ($scope, $log, $mdSidenav) {
+	.controller('sidenavController', function ($scope, $log, $mdSidenav, viewsFactory) {
 		'use strict';
-	
-		$scope.views = [
-			'about-me',
-			'home'
-		];
+
+		$scope.viewsData = viewsFactory;
 	
 		$scope.closeLeft = function () {
 			$mdSidenav('left').close();
