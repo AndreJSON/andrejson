@@ -7,8 +7,8 @@ angular.module('andrejson')
 		
 		data = {
 			views: [
-				{hash: 'home', name: 'Home'},
-				{hash: 'about-me', name: 'About'}
+				{hash: '/home', name: 'Home'},
+				{hash: '/about-me', name: 'About Me'}
 			],
 			names: []
 		};

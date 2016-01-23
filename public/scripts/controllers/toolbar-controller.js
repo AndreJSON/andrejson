@@ -1,17 +1,19 @@
 /*global angular*/
 
 angular.module('andrejson')
-	.controller('toolbarController', function ($scope, $location, $log, $mdSidenav) {
+	.controller('toolbarController', function ($scope, $location, $log, $mdSidenav, viewsFactory) {
 		'use strict';
 	
-		$scope.getPath = function () {
-			var path, firstLetter;
-			path = $location.path().substr(1);
-			path = path.replace('-', ' ');
-			firstLetter = path.substring(0, 1);
-			firstLetter = firstLetter.toUpperCase();
-			path = path.slice(1);
-			return firstLetter + path;
+		$scope.viewsData = viewsFactory;
+	
+		$scope.getViewName = function () {
+			var i, path = $location.path();
+			for (i = 0; i < $scope.viewsData.views.length; i++) {
+				if ($scope.viewsData.views[i].hash === path) {
+					return $scope.viewsData.views[i].name;
+				}
+			}
+			return "Error";
 		};
 	
 		$scope.openLeft = function () {
