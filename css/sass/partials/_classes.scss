@@ -2,6 +2,9 @@
 .aj-main-content {
 	height: 100%;
 	@include linear-gradient(rgb(230,231,231), rgb(232,236,236));
+	md-card {
+		display: inline-block;
+	}
 }
 
 .aj-centered-content {
