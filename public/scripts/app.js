@@ -13,6 +13,9 @@ angular.module('andrejson', ['ngMaterial', 'ngRoute', 'ngMdIcons'])
 			.when('/about-me', {
 				templateUrl: 'views/about-me.html'
 			})
+			.when('/bak-o-fram', {
+				templateUrl: 'views/bak-o-fram.html'
+			})
 			.otherwise({
 				templateUrl: 'views/404.html'
 			});
