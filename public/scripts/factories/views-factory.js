@@ -9,7 +9,7 @@ angular.module('andrejson')
 			views: [
 				{hash: '/home', name: 'Home'},
 				{hash: '/about-me', name: 'About Me'},
-				{hash: '/bak-o-fram', name: 'Bak-o-Fram'}
+				{hash: '/munchers', name: 'Munchers'}
 			]
 		};
 		return data;
