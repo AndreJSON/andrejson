@@ -10,7 +10,7 @@ angular.module('andrejson').directive('munchersDirective', function () {
 			windowHeight: '='
 		},
 		link: function (scope, element) {
-			scope.canvas = element.find('canvas')[0].getContext('2d');
+			scope.ctx = element.find('canvas')[0].getContext('2d');
 		},
 		controller: 'munchersController'
 	};
