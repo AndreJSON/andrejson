@@ -13,15 +13,19 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			$scope.simGlobal.frames = 0;
 			$scope.simGlobal.ticks = 0;
 		}
-		if ($scope.simGlobal.frameFinished && Date.now() - $scope.simGlobal.frameStamp > 1000 / $scope.simGlobal.fps) {
+		if ($scope.simGlobal.frameFinished && Date.now() - $scope.simGlobal.frameStamp > 1000 / $scope.simConfig.fps) {
 			$scope.simGlobal.frameFinished = false;
 			$scope.simGlobal.frameStamp = Date.now();
-			requestAnimationFrame($scope.draw);
+			requestAnimationFrame(function () {
+				$scope.draw();
+				$scope.simGlobal.frames += 1;
+				$scope.simGlobal.frameFinished = true;
+			});
 		}
-		if ($scope.simGlobal.tickFinished && Date.now() - $scope.simGlobal.tickStamp > 1000 / $scope.simGlobal.tps) {
-			$scope.simGlobal.tickFinished = false;
-			$scope.simGlobal.tickStamp += 1000 / $scope.simGlobal.tps;
-			$scope.simLoop();
+		if (Date.now() - $scope.simGlobal.tickStamp > 1000 / $scope.simConfig.tps) {
+			$scope.simGlobal.tickStamp += 1000 / $scope.simConfig.tps;
+			$scope.simTick();
+			$scope.simGlobal.ticks += 1;
 		}
 		$timeout($scope.loop, 5);
 	};
@@ -31,8 +35,6 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	 */
 	$scope.draw = function () {
 		$scope.drawBackground();
-		$scope.simGlobal.frames += 1;
-		$scope.simGlobal.frameFinished = true;
 	};
 	
 	/**
@@ -45,9 +47,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.ctx.fill();
 	};
 	
-	$scope.simLoop = function () {
-		$scope.simGlobal.ticks += 1;
-		$scope.simGlobal.tickFinished = true;
+	$scope.simTick = function () {
 	};
 	
 	$scope.animal = function () {
@@ -78,19 +78,18 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	//Keeps track of all state info.
 	$scope.simGlobal = {
 		stamp: undefined,
-		fps: 30,
 		frames: 0,
 		frameStamp: undefined,
 		frameFinished: true,
-		tps: 10,
 		ticks: 0,
-		tickStamp: undefined,
-		tickFinished: true
+		tickStamp: undefined
 	};
 	
 	//Keeps track of all configurations for the simulation
 	$scope.simConfig = {
-		backgroundColor: "rgba(200,200,200,1)",
+		fps: 30,
+		tps: 10,
+		backgroundColor: "rgba(210,210,210,1)",
 		nodeColor: "rgba(20,110,150,0.9)",
 		connectionColor: "rgba(50,50,50,0.8)",
 		maxFlapSpeed: 1 //Chosen arbitrarily, may likely need to change later.
