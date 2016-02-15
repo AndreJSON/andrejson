@@ -17,6 +17,7 @@ app.use('/angular-material', express.static(__dirname + '/node_modules/angular-m
 app.use('/angular-material-icons', express.static(__dirname + '/node_modules/angular-material-icons'));
 app.use('/stylesheets', express.static(__dirname + '/css/stylesheets'));
 app.use('/images', express.static(__dirname + '/images'));
+app.use('/favicon.ico', express.static(__dirname + '/images/favicon.ico'));
 
 app.listen(port);
 console.log("Server is now listening on port: " + port);
