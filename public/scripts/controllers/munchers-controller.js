@@ -35,6 +35,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	 */
 	$scope.draw = function () {
 		$scope.drawBackground();
+		$scope.drawAnimal();
 	};
 	
 	/**
@@ -47,20 +48,30 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.ctx.fill();
 	};
 	
+	$scope.drawAnimal = function () {
+		$scope.ctx.beginPath();
+		$scope.ctx.arc($scope.simGlobal.testAnimal.xPos, $scope.simGlobal.testAnimal.yPos, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
+		$scope.ctx.fillStyle = $scope.simConfig.nodeColor;
+		$scope.ctx.fill();
+	};
+	
 	$scope.simTick = function () {
 	};
 	
 	$scope.animal = function () {
-		this.node = new $scope.Node();
-		this.nodeConn = [];
+		this.node = new $scope.node();
+		this.xVel = 0;
+		this.yVel = 0;
+		this.xPos = $scope.windowWidth / 2;
+		this.yPos = $scope.windowHeight / 2;
 	};
 	
 	$scope.node = function () {
 		this.children = 0;
 		this.connections = [];
-		this.addChild = function (node) {
+		this.addChild = function (connection) {
 			this.children += 1;
-			this.connections.push(node);
+			this.connections.push(connection);
 		};
 	};
 	
@@ -82,7 +93,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		frameStamp: undefined,
 		frameFinished: true,
 		ticks: 0,
-		tickStamp: undefined
+		tickStamp: undefined,
+		testAnimal: undefined
 	};
 	
 	//Keeps track of all configurations for the simulation
@@ -92,13 +104,15 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		backgroundColor: "rgba(210,210,210,1)",
 		nodeColor: "rgba(20,110,150,0.9)",
 		connectionColor: "rgba(50,50,50,0.8)",
-		maxFlapSpeed: 1 //Chosen arbitrarily, may likely need to change later.
+		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
+		nodeSize: 10
 	};
 	
 	/**
 	 * Should be called to initialize the simulation.
 	 */
 	$scope.init = function () {
+		$scope.simGlobal.testAnimal = new $scope.animal();
 		$scope.simGlobal.stamp = Date.now();
 		$scope.simGlobal.frameStamp = Date.now();
 		$scope.simGlobal.tickStamp = Date.now();
