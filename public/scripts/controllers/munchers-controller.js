@@ -50,14 +50,39 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.simGlobal.tickFinished = true;
 	};
 	
+	$scope.animal = function () {
+		this.node = new $scope.Node();
+		this.nodeConn = [];
+	};
+	
+	$scope.node = function () {
+		this.children = 0;
+		this.connections = [];
+		this.addChild = function (node) {
+			this.children += 1;
+			this.connections.push(node);
+		};
+	};
+	
+	$scope.connection = function (angle, restAngle, expAngle, expSpeed, conSpeed, length, node) {
+		this.angle = angle;			//Current angle.
+		this.restAngle = restAngle;	//The angle when fully contracted. [0,2pi).
+		this.expAngle = expAngle;	//The angle when fully expanded. Can be > 2pi.
+		this.expanding = true;		//Set to true if the wing is currently expanding, false when contracting.
+		this.expSpeed = expSpeed;	//The speed of expansion. This must be a positive value, restricted by a max value.
+		this.conSpeed = conSpeed;	//The speed of contraction. This must be a positive value, restricted by a max value.
+		this.length = length;		//The length of the connection to the child node.
+		this.node = node;			//The child node.
+	};
+	
 	//Keeps track of all state info.
 	$scope.simGlobal = {
 		stamp: undefined,
-		fps: 10,
+		fps: 30,
 		frames: 0,
 		frameStamp: undefined,
 		frameFinished: true,
-		tps: 50,
+		tps: 10,
 		ticks: 0,
 		tickStamp: undefined,
 		tickFinished: true
@@ -65,7 +90,10 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	
 	//Keeps track of all configurations for the simulation
 	$scope.simConfig = {
-		backgroundColor: "rgba(0,0,0,0.1)"
+		backgroundColor: "rgba(200,200,200,1)",
+		nodeColor: "rgba(20,110,150,0.9)",
+		connectionColor: "rgba(50,50,50,0.8)",
+		maxFlapSpeed: 1 //Chosen arbitrarily, may likely need to change later.
 	};
 	
 	/**
