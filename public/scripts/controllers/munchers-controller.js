@@ -67,6 +67,26 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	$scope.simTick = function () {
+		$scope.moveAnimal($scope.simGlobal.testAnimal);
+	};
+	
+	$scope.moveAnimal = function (animal) {
+		$scope.flapChildren(animal.node);
+		animal.xPos += animal.xVel;
+		animal.yPos += animal.yVel;
+	};
+	
+	$scope.flapChildren = function (node) {
+		var i, conn;
+		for (i = 0; i < node.children; i += 1) {
+			conn = node.connections[i]; //Creating an alias for the targeted connection
+			if (conn.frameCount === (conn.expanding ? conn.expFrames : conn.conFrames)) {
+				conn.expanding = !conn.expanding;
+				conn.frameCount = 0;
+			}
+			conn.angle += conn.expanding ? conn.expVel : conn.conVel;
+			conn.frameCount += 1;
+		}
 	};
 	
 	$scope.animal = function () {
@@ -75,6 +95,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.yVel = 0;
 		this.xPos = $scope.windowWidth / 2;
 		this.yPos = $scope.windowHeight / 2;
+		this.angle = 0;
 	};
 	
 	$scope.node = function () {
@@ -86,15 +107,16 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		};
 	};
 	
-	$scope.connection = function (angle, restAngle, expAngle, expSpeed, conSpeed, length) {
-		this.angle = angle;			//Current angle.
-		this.restAngle = restAngle;	//The angle when fully contracted. [0,2pi).
-		this.expAngle = expAngle;	//The angle when fully expanded. Can be > 2pi.
-		this.expanding = true;		//Set to true if the wing is currently expanding, false when contracting.
-		this.expSpeed = expSpeed;	//The speed of expansion. This must be a positive value, restricted by a max value.
-		this.conSpeed = conSpeed;	//The speed of contraction. This must be a positive value, restricted by a max value.
-		this.length = length;		//The length of the connection to the child node.
-		this.node = new $scope.node();	//The child node.
+	$scope.connection = function (conAngle, expAngle, expFrames, conFrames, length) {
+		this.angle = conAngle;							//The current angle.
+		this.expVel = (expAngle - conAngle) / expFrames;//The expansion angle velocity.
+		this.conVel = (conAngle - expAngle) / conFrames;//The contraction angle velocity.
+		this.expanding = true;							//Set to true when the wing is expanding.
+		this.expFrames = expFrames;						//How many frames the wing expands.
+		this.conFrames = conFrames;						//How many frames the wing contracts.
+		this.frameCount = 0;								//Counter to keep track of when to change direction.
+		this.length = length;							//The length of the connection to the child node.
+		this.node = new $scope.node();					//The child node.
 	};
 	
 	//Keeps track of all state info.
@@ -124,8 +146,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	 */
 	$scope.init = function () {
 		$scope.simGlobal.testAnimal = new $scope.animal();
-		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(0, 0, 0, 0, 0, 100));
-		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(Math.PI, 0, 0, 0, 0, 100));
+		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(0, 1, 6, 10, 100));
+		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(Math.PI, Math.PI - 1, 6, 10, 100));
 		$scope.simGlobal.stamp = Date.now();
 		$scope.simGlobal.frameStamp = Date.now();
 		$scope.simGlobal.tickStamp = Date.now();
