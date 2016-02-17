@@ -27,7 +27,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			$scope.simTick();
 			$scope.simGlobal.ticks += 1;
 		}
-		$timeout($scope.loop, 5);
+		$timeout($scope.loop, 4);
 	};
 	
 	/**
@@ -49,16 +49,17 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	$scope.drawAnimal = function (node, xPos, yPos) {
-		var i, xChild, yChild;
+		var i, conn, xChild, yChild;
 		for (i = 0; i < node.children; i += 1) {
-			xChild = xPos + Math.cos(node.connections[i].angle) * node.connections[i].length / $scope.simConfig.nodeSize;
-			yChild = yPos + Math.sin(node.connections[i].angle) * node.connections[i].length / $scope.simConfig.nodeSize;
+			conn = node.connections[i]; //An alias for the current connection.
+			xChild = xPos + Math.cos(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+			yChild = yPos + Math.sin(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
 			$scope.ctx.beginPath();
 			$scope.ctx.moveTo(xPos, yPos);
 			$scope.ctx.lineTo(xChild, yChild);
 			$scope.ctx.strokeStyle = $scope.simConfig.connectionColor;
 			$scope.ctx.stroke();
-			$scope.drawAnimal(node.connections[i].node, xChild, yChild);
+			$scope.drawAnimal(conn.node, xChild, yChild);
 		}
 		$scope.ctx.beginPath();
 		$scope.ctx.arc(xPos, yPos, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
@@ -71,12 +72,12 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	$scope.moveAnimal = function (animal) {
-		$scope.flapChildren(animal.node);
+		$scope.flapChildren(animal.node, 0);
 		animal.xPos += animal.xVel;
 		animal.yPos += animal.yVel;
 	};
 	
-	$scope.flapChildren = function (node) {
+	$scope.flapChildren = function (node, angleChange) {
 		var i, conn;
 		for (i = 0; i < node.children; i += 1) {
 			conn = node.connections[i]; //Creating an alias for the targeted connection
@@ -84,8 +85,10 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 				conn.expanding = !conn.expanding;
 				conn.frameCount = 0;
 			}
-			conn.angle += conn.expanding ? conn.expVel : conn.conVel;
 			conn.frameCount += 1;
+			conn.angle += conn.expanding ? conn.expVel : conn.conVel;
+			conn.node.angle += angleChange + (conn.expanding ? conn.expVel : conn.conVel);
+			$scope.flapChildren(conn.node, angleChange + (conn.expanding ? conn.expVel : conn.conVel));
 		}
 	};
 	
@@ -99,6 +102,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	$scope.node = function () {
+		this.angle = 0;
 		this.children = 0;
 		this.connections = [];
 		this.addChild = function (connection) {
@@ -114,7 +118,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.expanding = true;							//Set to true when the wing is expanding.
 		this.expFrames = expFrames;						//How many frames the wing expands.
 		this.conFrames = conFrames;						//How many frames the wing contracts.
-		this.frameCount = 0;								//Counter to keep track of when to change direction.
+		this.frameCount = 0;							//Counter to keep track of when to change direction.
 		this.length = length;							//The length of the connection to the child node.
 		this.node = new $scope.node();					//The child node.
 	};
@@ -148,6 +152,10 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.simGlobal.testAnimal = new $scope.animal();
 		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(0, 1, 6, 10, 100));
 		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(Math.PI, Math.PI - 1, 6, 10, 100));
+		$scope.simGlobal.testAnimal.node.connections[0].node.addChild(new $scope.connection(0, 0.3, 6, 10, 100));
+		$scope.simGlobal.testAnimal.node.connections[1].node.addChild(new $scope.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
+		$scope.simGlobal.testAnimal.node.connections[0].node.connections[0].node.addChild(new $scope.connection(0, 0.3, 6, 10, 100));
+		$scope.simGlobal.testAnimal.node.connections[1].node.connections[0].node.addChild(new $scope.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
 		$scope.simGlobal.stamp = Date.now();
 		$scope.simGlobal.frameStamp = Date.now();
 		$scope.simGlobal.tickStamp = Date.now();
