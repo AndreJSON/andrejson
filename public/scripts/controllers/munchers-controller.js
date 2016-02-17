@@ -35,7 +35,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	 */
 	$scope.draw = function () {
 		$scope.drawBackground();
-		$scope.drawAnimal();
+		$scope.drawAnimal($scope.simGlobal.testAnimal.node, $scope.simGlobal.testAnimal.xPos, $scope.simGlobal.testAnimal.yPos);
 	};
 	
 	/**
@@ -48,9 +48,20 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.ctx.fill();
 	};
 	
-	$scope.drawAnimal = function () {
+	$scope.drawAnimal = function (node, xPos, yPos) {
+		var i, xChild, yChild;
+		for (i = 0; i < node.children; i += 1) {
+			xChild = xPos + Math.cos(node.connections[i].angle) * node.connections[i].length / $scope.simConfig.nodeSize;
+			yChild = yPos + Math.sin(node.connections[i].angle) * node.connections[i].length / $scope.simConfig.nodeSize;
+			$scope.ctx.beginPath();
+			$scope.ctx.moveTo(xPos, yPos);
+			$scope.ctx.lineTo(xChild, yChild);
+			$scope.ctx.strokeStyle = $scope.simConfig.connectionColor;
+			$scope.ctx.stroke();
+			$scope.drawAnimal(node.connections[i].node, xChild, yChild);
+		}
 		$scope.ctx.beginPath();
-		$scope.ctx.arc($scope.simGlobal.testAnimal.xPos, $scope.simGlobal.testAnimal.yPos, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
+		$scope.ctx.arc(xPos, yPos, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
 		$scope.ctx.fillStyle = $scope.simConfig.nodeColor;
 		$scope.ctx.fill();
 	};
@@ -75,7 +86,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		};
 	};
 	
-	$scope.connection = function (angle, restAngle, expAngle, expSpeed, conSpeed, length, node) {
+	$scope.connection = function (angle, restAngle, expAngle, expSpeed, conSpeed, length) {
 		this.angle = angle;			//Current angle.
 		this.restAngle = restAngle;	//The angle when fully contracted. [0,2pi).
 		this.expAngle = expAngle;	//The angle when fully expanded. Can be > 2pi.
@@ -83,7 +94,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.expSpeed = expSpeed;	//The speed of expansion. This must be a positive value, restricted by a max value.
 		this.conSpeed = conSpeed;	//The speed of contraction. This must be a positive value, restricted by a max value.
 		this.length = length;		//The length of the connection to the child node.
-		this.node = node;			//The child node.
+		this.node = new $scope.node();	//The child node.
 	};
 	
 	//Keeps track of all state info.
@@ -105,7 +116,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		nodeColor: "rgba(20,110,150,0.9)",
 		connectionColor: "rgba(50,50,50,0.8)",
 		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
-		nodeSize: 10
+		nodeSize: 5
 	};
 	
 	/**
@@ -113,6 +124,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	 */
 	$scope.init = function () {
 		$scope.simGlobal.testAnimal = new $scope.animal();
+		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(0, 0, 0, 0, 0, 100));
+		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(Math.PI, 0, 0, 0, 0, 100));
 		$scope.simGlobal.stamp = Date.now();
 		$scope.simGlobal.frameStamp = Date.now();
 		$scope.simGlobal.tickStamp = Date.now();
