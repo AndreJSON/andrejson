@@ -36,6 +36,9 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	$scope.draw = function () {
 		$scope.drawBackground();
 		$scope.drawAnimal($scope.simGlobal.testAnimal.node, $scope.simGlobal.testAnimal.xPos, $scope.simGlobal.testAnimal.yPos);
+		if ($scope.simConfig.showParticles) {
+			$scope.drawPhysicsParticles($scope.simGlobal.testAnimal);
+		}
 	};
 	
 	/**
@@ -67,14 +70,24 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.ctx.fill();
 	};
 	
+	$scope.drawPhysicsParticles = function (animal) {
+		$scope.ctx.beginPath();
+		$scope.ctx.arc(animal.xMass, animal.yMass, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
+		$scope.ctx.fillStyle = $scope.simConfig.particleColor;
+		$scope.ctx.fill();
+	};
+	
 	$scope.simTick = function () {
 		$scope.moveAnimal($scope.simGlobal.testAnimal);
 	};
 	
 	$scope.moveAnimal = function (animal) {
+		animal.calculateMassCenter();
 		$scope.flapChildren(animal.node, 0);
+		//TODO: Calculate forces.
 		animal.xPos += animal.xVel;
 		animal.yPos += animal.yVel;
+		//TODO: Reduce speed according to drag.
 	};
 	
 	$scope.flapChildren = function (node, angleChange) {
@@ -96,9 +109,29 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.node = new $scope.node();
 		this.xVel = 0;
 		this.yVel = 0;
-		this.xPos = $scope.windowWidth / 2;
-		this.yPos = $scope.windowHeight / 2;
-		this.angle = 0;
+		this.xPos = $scope.windowWidth / 2;	//The x-wise position of the root node.
+		this.yPos = $scope.windowHeight / 2;//The y-wise position of the root node.
+		this.xMass = 0;	//The x-wise center of mass.
+		this.yMass = 0;	//The y-wise center of mass.
+		function massCrawl(accum, node, x, y) {
+			var i, conn, nodeX, nodeY;
+			for (i = 0; i < node.children; i += 1) {
+				conn = node.connections[i];
+				nodeX = x + Math.cos(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+				nodeY = y + Math.sin(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+				accum.x.push(nodeX);
+				accum.y.push(nodeY);
+				massCrawl(accum, conn.node, nodeX, nodeY);
+			}
+		}
+		this.calculateMassCenter = function () {
+			var accum = {x: [], y: [] }; //An accumulator for node positions.
+			accum.x.push(this.xPos);
+			accum.y.push(this.yPos);
+			massCrawl(accum, this.node, this.xPos, this.yPos);
+			this.xMass = accum.x.reduce(function (a, b) {return a + b; }, 0) / accum.x.length;
+			this.yMass = accum.y.reduce(function (a, b) {return a + b; }, 0) / accum.y.length;
+		};
 	};
 	
 	$scope.node = function () {
@@ -136,13 +169,15 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	
 	//Keeps track of all configurations for the simulation
 	$scope.simConfig = {
-		fps: 30,
+		fps: 40,
 		tps: 10,
 		backgroundColor: "rgba(210,210,210,1)",
 		nodeColor: "rgba(20,110,150,0.9)",
 		connectionColor: "rgba(50,50,50,0.8)",
+		particleColor: "rgba(200,0,0,1)",
 		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
-		nodeSize: 5
+		nodeSize: 5,
+		showParticles: true
 	};
 	
 	/**
