@@ -55,8 +55,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		var i, conn, xChild, yChild;
 		for (i = 0; i < node.children; i += 1) {
 			conn = node.connections[i]; //An alias for the current connection.
-			xChild = xPos + Math.cos(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
-			yChild = yPos + Math.sin(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+			xChild = xPos + Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+			yChild = yPos + Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
 			$scope.ctx.beginPath();
 			$scope.ctx.moveTo(xPos, yPos);
 			$scope.ctx.lineTo(xChild, yChild);
@@ -119,8 +119,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		var i, conn, deltaX, deltaY;
 		for (i = 0; i < node.children; i += 1) {
 			conn = node.connections[i];
-			deltaX = Math.cos(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
-			deltaY = Math.sin(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+			deltaX = Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+			deltaY = Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
 			accum.xPos.push(x + deltaX * Math.pow(1 / 2, 1 / 3));
 			accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
 			//accum.xF
@@ -141,8 +141,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			var i, conn, nodeX, nodeY;
 			for (i = 0; i < node.children; i += 1) {
 				conn = node.connections[i];
-				nodeX = x + Math.cos(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
-				nodeY = y + Math.sin(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+				nodeX = x + Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+				nodeY = y + Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
 				accum.x.push(nodeX);
 				accum.y.push(nodeY);
 				massCrawl(accum, conn.node, nodeX, nodeY);
@@ -202,6 +202,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		forceColor: "rgba(200,0,200,1)",
 		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
 		nodeSize: 5,
+		lengthScale: 0.5,
 		showParticles: true
 	};
 	
