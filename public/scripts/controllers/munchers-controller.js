@@ -75,11 +75,15 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.ctx.fillStyle = $scope.simConfig.forceColor;
 		for (i = 0; i < animal.forces.xPos.length; i += 1) {
 			$scope.ctx.beginPath();
-			$scope.ctx.arc(animal.forces.xPos[i], animal.forces.yPos[i], $scope.simConfig.nodeSize, 0, 2 * Math.PI);
+			$scope.ctx.arc(animal.forces.xPos[i], animal.forces.yPos[i], $scope.simConfig.nodeSize / 2, 0, 2 * Math.PI);
 			$scope.ctx.fill();
+			$scope.ctx.beginPath();
+			$scope.ctx.moveTo(animal.forces.xPos[i], animal.forces.yPos[i]);
+			$scope.ctx.lineTo(animal.forces.xPos[i] + animal.forces.xF[i], animal.forces.xPos[i] + animal.forces.yF[i]);
+			$scope.ctx.stroke();
 		}
 		$scope.ctx.beginPath();
-		$scope.ctx.arc(animal.xMass, animal.yMass, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
+		$scope.ctx.arc(animal.xMass, animal.yMass, $scope.simConfig.nodeSize / 2, 0, 2 * Math.PI);
 		$scope.ctx.fillStyle = $scope.simConfig.massColor;
 		$scope.ctx.fill();
 	};
@@ -89,8 +93,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	sim.moveAnimal = function (animal) {
-		sim.calculateMassCenter(animal);
 		sim.flapChildren(animal.node, 0);
+		sim.calculateMassCenter(animal);
 		animal.resetForces();
 		sim.calculateFlapForce(animal.forces, animal.node, animal.xPos, animal.yPos);
 		//TODO: Calculate forces from drag.
@@ -107,8 +111,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			deltaY = Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
 			accum.xPos.push(x + deltaX * Math.pow(1 / 2, 1 / 3));
 			accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
-			//accum.xF
-			//accum.yF
+			accum.xF.push(conn.expSign * Math.pow(conn.length, 3) * Math.pow(conn.expanding ? conn.expVel : conn.conVel, 2) * Math.cos(Math.PI / 2 - node.angle - conn.angle));
+			accum.yF.push(-conn.expSign * Math.pow(conn.length, 3) * Math.pow(conn.expanding ? conn.expVel : conn.conVel, 2) * Math.sin(Math.PI / 2 - node.angle - conn.angle));
 			sim.calculateFlapForce(accum, conn.node, x + deltaX, y + deltaY);
 		}
 	};
@@ -177,6 +181,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.expVel = (expAngle - conAngle) / expFrames;//The expansion angle velocity.
 		this.conVel = (conAngle - expAngle) / conFrames;//The contraction angle velocity.
 		this.expanding = true;							//Set to true when the wing is expanding.
+		this.expSign = (expAngle > conAngle ? 1 : -1);	//The sign of the angle velocity when expanding.
 		this.expFrames = expFrames;						//How many frames the wing expands.
 		this.conFrames = conFrames;						//How many frames the wing contracts.
 		this.frameCount = 0;							//Counter to keep track of when to change direction.
@@ -202,8 +207,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		backgroundColor: "rgba(210,210,210,1)",
 		nodeColor: "rgba(20,110,150,0.9)",
 		connectionColor: "rgba(50,50,50,0.8)",
-		massColor: "rgba(200,0,0,1)",
-		forceColor: "rgba(200,0,200,1)",
+		massColor: "rgba(255,0,0,1)",
+		forceColor: "rgba(255,0,255,1)",
 		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
 		nodeSize: 7,
 		lengthScale: 0.35,
