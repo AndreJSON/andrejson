@@ -90,13 +90,46 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	
 	sim.moveAnimal = function (animal) {
 		$scope.flapForce = {xPos: [], yPos: [], xF: [], yF: []};
-		animal.calculateMassCenter();
+		sim.calculateMassCenter(animal);
 		sim.flapChildren(animal.node, 0);
 		sim.calculateFlapForce($scope.flapForce, animal.node, animal.xPos, animal.yPos);
 		//TODO: Calculate forces from drag.
 		//TODO: Calculate new velocity from forces.
 		animal.xPos += animal.xVel;
 		animal.yPos += animal.yVel;
+	};
+	
+	sim.calculateFlapForce = function (accum, node, x, y) {
+		var i, conn, deltaX, deltaY;
+		for (i = 0; i < node.children; i += 1) {
+			conn = node.connections[i];
+			deltaX = Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+			deltaY = Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+			accum.xPos.push(x + deltaX * Math.pow(1 / 2, 1 / 3));
+			accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
+			//accum.xF
+			//accum.yF
+			sim.calculateFlapForce(accum, conn.node, x + deltaX, y + deltaY);
+		}
+	};
+	
+	sim.calculateMassCenter = function (animal) {
+		var accum = {x: [], y: [] }; //An accumulator for node positions.
+		accum.x.push(animal.xPos);
+		accum.y.push(animal.yPos);
+		(function crawl(accum, node, x, y) { //Anonymous function that crawls down all descendant nodes.
+			var i, conn, nodeX, nodeY;
+			for (i = 0; i < node.children; i += 1) {
+				conn = node.connections[i];
+				nodeX = x + Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+				nodeY = y + Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+				accum.x.push(nodeX);
+				accum.y.push(nodeY);
+				crawl(accum, conn.node, nodeX, nodeY);
+			}
+		}(accum, animal.node, animal.xPos, animal.yPos));
+		animal.xMass = accum.x.reduce(function (a, b) {return a + b; }, 0) / accum.x.length;
+		animal.yMass = accum.y.reduce(function (a, b) {return a + b; }, 0) / accum.y.length;
 	};
 	
 	sim.flapChildren = function (node, angleChange) {
@@ -114,20 +147,6 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		}
 	};
 	
-	sim.calculateFlapForce = function (accum, node, x, y) {
-		var i, conn, deltaX, deltaY;
-		for (i = 0; i < node.children; i += 1) {
-			conn = node.connections[i];
-			deltaX = Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
-			deltaY = Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
-			accum.xPos.push(x + deltaX * Math.pow(1 / 2, 1 / 3));
-			accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
-			//accum.xF
-			//accum.yF
-			sim.calculateFlapForce(accum, conn.node, x + deltaX, y + deltaY);
-		}
-	};
-	
 	sim.animal = function () {
 		this.node = new sim.node();
 		this.xVel = 0;
@@ -136,25 +155,6 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.yPos = $scope.windowHeight / 2;//The y-wise position of the root node.
 		this.xMass = 0;	//The x-wise center of mass.
 		this.yMass = 0;	//The y-wise center of mass.
-		function massCrawl(accum, node, x, y) {
-			var i, conn, nodeX, nodeY;
-			for (i = 0; i < node.children; i += 1) {
-				conn = node.connections[i];
-				nodeX = x + Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
-				nodeY = y + Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
-				accum.x.push(nodeX);
-				accum.y.push(nodeY);
-				massCrawl(accum, conn.node, nodeX, nodeY);
-			}
-		}
-		this.calculateMassCenter = function () {
-			var accum = {x: [], y: [] }; //An accumulator for node positions.
-			accum.x.push(this.xPos);
-			accum.y.push(this.yPos);
-			massCrawl(accum, this.node, this.xPos, this.yPos);
-			this.xMass = accum.x.reduce(function (a, b) {return a + b; }, 0) / accum.x.length;
-			this.yMass = accum.y.reduce(function (a, b) {return a + b; }, 0) / accum.y.length;
-		};
 	};
 	
 	sim.node = function () {
