@@ -2,56 +2,56 @@
 
 angular.module('andrejson').controller('munchersController', function ($scope, $log, $timeout, $window) {
 	'use strict';
-	
+	var sim = {};
 	/**
 	 * Loops over all functions needed to progress the simulation.
 	 */
-	$scope.loop = function () {
-		if (Date.now() - $scope.simGlobal.stamp > 1000) {
-			$scope.simGlobal.stamp = Date.now();
-			$log.info('fps: ' + $scope.simGlobal.frames + ', tps: ' + $scope.simGlobal.ticks);
-			$scope.simGlobal.frames = 0;
-			$scope.simGlobal.ticks = 0;
+	sim.loop = function () {
+		if (Date.now() - sim.global.stamp > 1000) {
+			sim.global.stamp = Date.now();
+			$log.info('fps: ' + sim.global.frames + ', tps: ' + sim.global.ticks);
+			sim.global.frames = 0;
+			sim.global.ticks = 0;
 		}
-		if ($scope.simGlobal.frameFinished && Date.now() - $scope.simGlobal.frameStamp > 1000 / $scope.simConfig.fps) {
-			$scope.simGlobal.frameFinished = false;
-			$scope.simGlobal.frameStamp = Date.now();
+		if (sim.global.frameFinished && Date.now() - sim.global.frameStamp > 1000 / $scope.simConfig.fps) {
+			sim.global.frameFinished = false;
+			sim.global.frameStamp = Date.now();
 			requestAnimationFrame(function () {
-				$scope.draw();
-				$scope.simGlobal.frames += 1;
-				$scope.simGlobal.frameFinished = true;
+				sim.draw();
+				sim.global.frames += 1;
+				sim.global.frameFinished = true;
 			});
 		}
-		if (Date.now() - $scope.simGlobal.tickStamp > 1000 / $scope.simConfig.tps) {
-			$scope.simGlobal.tickStamp += 1000 / $scope.simConfig.tps;
-			$scope.simTick();
-			$scope.simGlobal.ticks += 1;
+		if (Date.now() - sim.global.tickStamp > 1000 / $scope.simConfig.tps) {
+			sim.global.tickStamp += 1000 / $scope.simConfig.tps;
+			sim.tick();
+			sim.global.ticks += 1;
 		}
-		$timeout($scope.loop, 4);
+		$timeout(sim.loop, 4);
 	};
 	
 	/**
 	 * Redraws the screen and all its entities.
 	 */
-	$scope.draw = function () {
-		$scope.drawBackground();
-		$scope.drawAnimal($scope.simGlobal.testAnimal.node, $scope.simGlobal.testAnimal.xPos, $scope.simGlobal.testAnimal.yPos);
+	sim.draw = function () {
+		sim.drawBackground();
+		sim.drawAnimal(sim.global.testAnimal.node, sim.global.testAnimal.xPos, sim.global.testAnimal.yPos);
 		if ($scope.simConfig.showParticles) {
-			$scope.drawPhysicsParticles($scope.simGlobal.testAnimal);
+			sim.drawPhysicsParticles(sim.global.testAnimal);
 		}
 	};
 	
 	/**
 	 * Subroutine to draw. Draws the background.
 	 */
-	$scope.drawBackground = function () {
+	sim.drawBackground = function () {
 		$scope.ctx.beginPath();
 		$scope.ctx.rect(0, 0, $scope.windowWidth, $scope.windowHeight);
 		$scope.ctx.fillStyle = $scope.simConfig.backgroundColor;
 		$scope.ctx.fill();
 	};
 	
-	$scope.drawAnimal = function (node, xPos, yPos) {
+	sim.drawAnimal = function (node, xPos, yPos) {
 		var i, conn, xChild, yChild;
 		for (i = 0; i < node.children; i += 1) {
 			conn = node.connections[i]; //An alias for the current connection.
@@ -62,7 +62,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			$scope.ctx.lineTo(xChild, yChild);
 			$scope.ctx.strokeStyle = $scope.simConfig.connectionColor;
 			$scope.ctx.stroke();
-			$scope.drawAnimal(conn.node, xChild, yChild);
+			sim.drawAnimal(conn.node, xChild, yChild);
 		}
 		$scope.ctx.beginPath();
 		$scope.ctx.arc(xPos, yPos, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
@@ -70,7 +70,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.ctx.fill();
 	};
 	
-	$scope.drawPhysicsParticles = function (animal) {
+	sim.drawPhysicsParticles = function (animal) {
 		var i;
 		$scope.ctx.fillStyle = $scope.simConfig.forceColor;
 		for (i = 0; i < $scope.flapForce.xPos.length; i += 1) {
@@ -84,23 +84,22 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		$scope.ctx.fill();
 	};
 	
-	$scope.simTick = function () {
-		$scope.moveAnimal($scope.simGlobal.testAnimal);
+	sim.tick = function () {
+		sim.moveAnimal(sim.global.testAnimal);
 	};
 	
-	$scope.moveAnimal = function (animal) {
+	sim.moveAnimal = function (animal) {
 		$scope.flapForce = {xPos: [], yPos: [], xF: [], yF: []};
 		animal.calculateMassCenter();
-		$scope.flapChildren(animal.node, 0);
-		$scope.calculateFlapForce($scope.flapForce, animal.node, animal.xPos, animal.yPos);
-		$log.info($scope.flapForce.yPos[1]);
+		sim.flapChildren(animal.node, 0);
+		sim.calculateFlapForce($scope.flapForce, animal.node, animal.xPos, animal.yPos);
 		//TODO: Calculate forces from drag.
 		//TODO: Calculate new velocity from forces.
 		animal.xPos += animal.xVel;
 		animal.yPos += animal.yVel;
 	};
 	
-	$scope.flapChildren = function (node, angleChange) {
+	sim.flapChildren = function (node, angleChange) {
 		var i, conn;
 		for (i = 0; i < node.children; i += 1) {
 			conn = node.connections[i]; //Creating an alias for the targeted connection
@@ -111,11 +110,11 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			conn.frameCount += 1;
 			conn.angle += conn.expanding ? conn.expVel : conn.conVel;
 			conn.node.angle += angleChange + (conn.expanding ? conn.expVel : conn.conVel);
-			$scope.flapChildren(conn.node, angleChange + (conn.expanding ? conn.expVel : conn.conVel));
+			sim.flapChildren(conn.node, angleChange + (conn.expanding ? conn.expVel : conn.conVel));
 		}
 	};
 	
-	$scope.calculateFlapForce = function (accum, node, x, y) {
+	sim.calculateFlapForce = function (accum, node, x, y) {
 		var i, conn, deltaX, deltaY;
 		for (i = 0; i < node.children; i += 1) {
 			conn = node.connections[i];
@@ -125,12 +124,12 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
 			//accum.xF
 			//accum.yF
-			$scope.calculateFlapForce(accum, conn.node, x + deltaX, y + deltaY);
+			sim.calculateFlapForce(accum, conn.node, x + deltaX, y + deltaY);
 		}
 	};
 	
-	$scope.animal = function () {
-		this.node = new $scope.node();
+	sim.animal = function () {
+		this.node = new sim.node();
 		this.xVel = 0;
 		this.yVel = 0;
 		this.xPos = $scope.windowWidth / 2;	//The x-wise position of the root node.
@@ -158,7 +157,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		};
 	};
 	
-	$scope.node = function () {
+	sim.node = function () {
 		this.angle = 0;
 		this.children = 0;
 		this.connections = [];
@@ -168,7 +167,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		};
 	};
 	
-	$scope.connection = function (conAngle, expAngle, expFrames, conFrames, length) {
+	sim.connection = function (conAngle, expAngle, expFrames, conFrames, length) {
 		this.angle = conAngle;							//The current angle.
 		this.expVel = (expAngle - conAngle) / expFrames;//The expansion angle velocity.
 		this.conVel = (conAngle - expAngle) / conFrames;//The contraction angle velocity.
@@ -177,11 +176,11 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.conFrames = conFrames;						//How many frames the wing contracts.
 		this.frameCount = 0;							//Counter to keep track of when to change direction.
 		this.length = length;							//The length of the connection to the child node.
-		this.node = new $scope.node();					//The child node.
+		this.node = new sim.node();					//The child node.
 	};
 	
 	//Keeps track of all state info.
-	$scope.simGlobal = {
+	sim.global = {
 		stamp: undefined,
 		frames: 0,
 		frameStamp: undefined,
@@ -209,18 +208,18 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	/**
 	 * Should be called to initialize the simulation.
 	 */
-	$scope.init = function () {
-		$scope.simGlobal.testAnimal = new $scope.animal();
-		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(0, 1, 6, 10, 100));
-		$scope.simGlobal.testAnimal.node.addChild(new $scope.connection(Math.PI, Math.PI - 1, 6, 10, 100));
-		$scope.simGlobal.testAnimal.node.connections[0].node.addChild(new $scope.connection(0, 0.3, 6, 10, 100));
-		$scope.simGlobal.testAnimal.node.connections[1].node.addChild(new $scope.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
-		$scope.simGlobal.testAnimal.node.connections[0].node.connections[0].node.addChild(new $scope.connection(0, 0.3, 6, 10, 100));
-		$scope.simGlobal.testAnimal.node.connections[1].node.connections[0].node.addChild(new $scope.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
-		$scope.simGlobal.stamp = Date.now();
-		$scope.simGlobal.frameStamp = Date.now();
-		$scope.simGlobal.tickStamp = Date.now();
-		$scope.loop();
+	sim.init = function () {
+		sim.global.testAnimal = new sim.animal();
+		sim.global.testAnimal.node.addChild(new sim.connection(0, 1, 6, 10, 100));
+		sim.global.testAnimal.node.addChild(new sim.connection(Math.PI, Math.PI - 1, 6, 10, 100));
+		sim.global.testAnimal.node.connections[0].node.addChild(new sim.connection(0, 0.3, 6, 10, 100));
+		sim.global.testAnimal.node.connections[1].node.addChild(new sim.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
+		sim.global.testAnimal.node.connections[0].node.connections[0].node.addChild(new sim.connection(0, 0.3, 6, 10, 100));
+		sim.global.testAnimal.node.connections[1].node.connections[0].node.addChild(new sim.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
+		sim.global.stamp = Date.now();
+		sim.global.frameStamp = Date.now();
+		sim.global.tickStamp = Date.now();
+		sim.loop();
 	};
 	
 	/**
@@ -229,6 +228,6 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	$timeout(function () {
 		$scope.windowWidth = $window.innerWidth * 0.8;
 		$scope.windowHeight = $window.innerHeight * 0.8;
-		$scope.init();
+		sim.init();
 	});
 });
