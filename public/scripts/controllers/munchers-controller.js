@@ -73,9 +73,9 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	sim.drawPhysicsParticles = function (animal) {
 		var i;
 		$scope.ctx.fillStyle = $scope.simConfig.forceColor;
-		for (i = 0; i < $scope.flapForce.xPos.length; i += 1) {
+		for (i = 0; i < animal.forces.xPos.length; i += 1) {
 			$scope.ctx.beginPath();
-			$scope.ctx.arc($scope.flapForce.xPos[i], $scope.flapForce.yPos[i], $scope.simConfig.nodeSize, 0, 2 * Math.PI);
+			$scope.ctx.arc(animal.forces.xPos[i], animal.forces.yPos[i], $scope.simConfig.nodeSize, 0, 2 * Math.PI);
 			$scope.ctx.fill();
 		}
 		$scope.ctx.beginPath();
@@ -89,10 +89,10 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	sim.moveAnimal = function (animal) {
-		$scope.flapForce = {xPos: [], yPos: [], xF: [], yF: []};
 		sim.calculateMassCenter(animal);
 		sim.flapChildren(animal.node, 0);
-		sim.calculateFlapForce($scope.flapForce, animal.node, animal.xPos, animal.yPos);
+		animal.resetForces();
+		sim.calculateFlapForce(animal.forces, animal.node, animal.xPos, animal.yPos);
 		//TODO: Calculate forces from drag.
 		//TODO: Calculate new velocity from forces.
 		animal.xPos += animal.xVel;
@@ -155,6 +155,11 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.yPos = $scope.windowHeight / 2;//The y-wise position of the root node.
 		this.xMass = 0;	//The x-wise center of mass.
 		this.yMass = 0;	//The y-wise center of mass.
+		this.forces = {xPos: [], yPos: [], xF: [], yF: []};
+	};
+	
+	sim.animal.prototype.resetForces = function () {
+		this.forces = {xPos: [], yPos: [], xF: [], yF: []};
 	};
 	
 	sim.node = function () {
@@ -176,7 +181,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.conFrames = conFrames;						//How many frames the wing contracts.
 		this.frameCount = 0;							//Counter to keep track of when to change direction.
 		this.length = length;							//The length of the connection to the child node.
-		this.node = new sim.node();					//The child node.
+		this.node = new sim.node();						//The child node.
 	};
 	
 	//Keeps track of all state info.
@@ -192,7 +197,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	
 	//Keeps track of all configurations for the simulation
 	$scope.simConfig = {
-		fps: 6,
+		fps: 60,
 		tps: 10,
 		backgroundColor: "rgba(210,210,210,1)",
 		nodeColor: "rgba(20,110,150,0.9)",
@@ -200,8 +205,8 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		massColor: "rgba(200,0,0,1)",
 		forceColor: "rgba(200,0,200,1)",
 		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
-		nodeSize: 5,
-		lengthScale: 0.5,
+		nodeSize: 7,
+		lengthScale: 0.35,
 		showParticles: true
 	};
 	
