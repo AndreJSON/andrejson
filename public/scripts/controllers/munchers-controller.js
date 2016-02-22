@@ -71,9 +71,16 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	$scope.drawPhysicsParticles = function (animal) {
+		var i;
+		$scope.ctx.fillStyle = $scope.simConfig.forceColor;
+		for (i = 0; i < $scope.flapForce.xPos.length; i += 1) {
+			$scope.ctx.beginPath();
+			$scope.ctx.arc($scope.flapForce.xPos[i], $scope.flapForce.yPos[i], $scope.simConfig.nodeSize, 0, 2 * Math.PI);
+			$scope.ctx.fill();
+		}
 		$scope.ctx.beginPath();
 		$scope.ctx.arc(animal.xMass, animal.yMass, $scope.simConfig.nodeSize, 0, 2 * Math.PI);
-		$scope.ctx.fillStyle = $scope.simConfig.particleColor;
+		$scope.ctx.fillStyle = $scope.simConfig.massColor;
 		$scope.ctx.fill();
 	};
 	
@@ -82,12 +89,15 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	$scope.moveAnimal = function (animal) {
+		$scope.flapForce = {xPos: [], yPos: [], xF: [], yF: []};
 		animal.calculateMassCenter();
 		$scope.flapChildren(animal.node, 0);
-		//TODO: Calculate forces.
+		$scope.calculateFlapForce($scope.flapForce, animal.node, animal.xPos, animal.yPos);
+		$log.info($scope.flapForce.yPos[1]);
+		//TODO: Calculate forces from drag.
+		//TODO: Calculate new velocity from forces.
 		animal.xPos += animal.xVel;
 		animal.yPos += animal.yVel;
-		//TODO: Reduce speed according to drag.
 	};
 	
 	$scope.flapChildren = function (node, angleChange) {
@@ -102,6 +112,20 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			conn.angle += conn.expanding ? conn.expVel : conn.conVel;
 			conn.node.angle += angleChange + (conn.expanding ? conn.expVel : conn.conVel);
 			$scope.flapChildren(conn.node, angleChange + (conn.expanding ? conn.expVel : conn.conVel));
+		}
+	};
+	
+	$scope.calculateFlapForce = function (accum, node, x, y) {
+		var i, conn, deltaX, deltaY;
+		for (i = 0; i < node.children; i += 1) {
+			conn = node.connections[i];
+			deltaX = Math.cos(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+			deltaY = Math.sin(node.angle + conn.angle) * conn.length / $scope.simConfig.nodeSize;
+			accum.xPos.push(x + deltaX * Math.pow(1 / 2, 1 / 3));
+			accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
+			//accum.xF
+			//accum.yF
+			$scope.calculateFlapForce(accum, conn.node, x + deltaX, y + deltaY);
 		}
 	};
 	
@@ -169,12 +193,13 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	
 	//Keeps track of all configurations for the simulation
 	$scope.simConfig = {
-		fps: 40,
+		fps: 6,
 		tps: 10,
 		backgroundColor: "rgba(210,210,210,1)",
 		nodeColor: "rgba(20,110,150,0.9)",
 		connectionColor: "rgba(50,50,50,0.8)",
-		particleColor: "rgba(200,0,0,1)",
+		massColor: "rgba(200,0,0,1)",
+		forceColor: "rgba(200,0,200,1)",
 		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
 		nodeSize: 5,
 		showParticles: true
