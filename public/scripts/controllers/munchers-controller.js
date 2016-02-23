@@ -95,10 +95,10 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	sim.tick = function () {
-		sim.moveAnimal(sim.global.testAnimal);
+		sim.animalPhysics(sim.global.testAnimal);
 	};
 	
-	sim.moveAnimal = function (animal) {
+	sim.animalPhysics = function (animal) {
 		sim.flapChildren(animal.node, 0);
 		sim.calculateMassCenter(animal);
 		animal.resetForces();
@@ -106,8 +106,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		//TODO: Make it so calculateFlapForce takes all children into consideration when a flap happens.
 		//TODO: Calculate forces from drag.
 		sim.calculateAcceleration(animal);
-		animal.xPos += animal.xVel;
-		animal.yPos += animal.yVel;
+		sim.performMovement(animal);
 	};
 	
 	sim.flapChildren = function (node, angleChange) {
@@ -161,7 +160,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	};
 	
 	sim.calculateAcceleration = function (animal) {
-		var i, angle, m1, m2, f1, f2;
+		var i, angle, m1, m2, f1, f2, xRotForce, yRotForce, rotDirection;
 		for (i = 0; i < animal.forces.xPos.length; i += 1) {
 			m1 = animal.xMass - animal.forces.xPos[i];
 			m2 = animal.yMass - animal.forces.yPos[i];
@@ -170,16 +169,32 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 			angle = Math.acos((m1 * f1 + m2 * f2) / Math.sqrt((m1 * m1 + m2 * m2) * (f1 * f1 + f2 * f2)));
 			animal.xAccForce += Math.cos(angle - Math.PI / 2) * animal.forces.xF[i];
 			animal.yAccForce += Math.cos(angle - Math.PI / 2) * animal.forces.yF[i];
-			
+			xRotForce = Math.sin(angle - Math.PI / 2) * animal.forces.xF[i];
+			yRotForce = Math.sin(angle - Math.PI / 2) * animal.forces.yF[i];
+			//Determines if the rotation should be in positive or negative direction.
+			if (Math.abs(m1) > Math.abs(m2)) {
+				rotDirection = Math.sign(-m2) * (Math.sign(-m1 > 0) ? 1 : -1);
+			} else {
+				rotDirection = Math.sign(-m1) * (Math.sign(-m2 > 0) ? -1 : 1);
+			}
+			animal.rotVel += rotDirection * Math.sqrt(Math.pow(xRotForce, 2) + Math.pow(yRotForce, 2)) * $scope.simConfig.rotConstant;
 		}
 		animal.xVel += $scope.simConfig.accConstant * animal.xAccForce;
 		animal.yVel += $scope.simConfig.accConstant * animal.yAccForce;
-		//TODO: Calculate new velocity from forces.
-		//TODO: Calculate rotation from forces.
+	};
+	
+	sim.performMovement = function (animal) {
+		$log.info(animal.rotVel);
+		animal.node.angle += animal.rotVel;
+		animal.alignWithRotation();
+		//animal.xPos += animal.xVel;
+		//animal.yPos += animal.yVel;
+		animal.rotVel *= 0.9;
 	};
 	
 	sim.animal = function () {
 		this.node = new sim.node();
+		this.rotVel = 0;
 		this.xVel = 0;
 		this.yVel = 0;
 		this.xPos = $scope.windowWidth / 2;	//The x-wise position of the root node.
@@ -189,8 +204,21 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.forces = {xPos: [], yPos: [], xF: [], yF: []};
 		this.xAccForce = 0;
 		this.yAccForce = 0;
-		this.xRotForce = 0;
-		this.yRotForce = 0;
+	};
+	
+	sim.animal.prototype.alignWithRotation = function () {
+		var angle, xRootToCenter, yRootToCenter, rootToCenter;
+		xRootToCenter = this.xMass - this.xPos;
+		yRootToCenter = this.yMass - this.yPos;
+		rootToCenter = Math.sqrt(Math.pow(xRootToCenter, 2) + Math.pow(yRootToCenter, 2));
+		angle = Math.acos(xRootToCenter / rootToCenter);
+		if (yRootToCenter < 0) {
+			angle = 2 * Math.PI - angle;
+		}
+		if (!isNaN(angle)) {
+			this.xPos += Math.cos(angle) * rootToCenter - Math.cos(angle + this.rotVel) * rootToCenter;
+			this.yPos += Math.sin(angle) * rootToCenter - Math.sin(angle + this.rotVel) * rootToCenter;
+		}
 	};
 	
 	sim.animal.prototype.resetForces = function () {
@@ -238,7 +266,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	//Keeps track of all configurations for the simulation
 	$scope.simConfig = {
 		fps: 60,
-		tps: 10,
+		tps: 5,
 		backgroundColor: "rgba(210,210,210,1)",
 		nodeColor: "rgba(20,110,150,0.9)",
 		connectionColor: "rgba(50,50,50,0.8)",
@@ -247,6 +275,7 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		nodeSize: 7,
 		lengthScale: 0.35,
 		accConstant: 0.000005,
+		rotConstant: 0.000001,
 		showParticles: true
 	};
 	
