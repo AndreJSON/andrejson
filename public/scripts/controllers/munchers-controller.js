@@ -73,19 +73,25 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	sim.drawPhysicsParticles = function (animal) {
 		var i;
 		$scope.ctx.fillStyle = $scope.simConfig.forceColor;
+		$scope.ctx.strokeStyle = $scope.simConfig.forceColor;
 		for (i = 0; i < animal.forces.xPos.length; i += 1) {
 			$scope.ctx.beginPath();
 			$scope.ctx.arc(animal.forces.xPos[i], animal.forces.yPos[i], $scope.simConfig.nodeSize / 2, 0, 2 * Math.PI);
 			$scope.ctx.fill();
 			$scope.ctx.beginPath();
 			$scope.ctx.moveTo(animal.forces.xPos[i], animal.forces.yPos[i]);
-			$scope.ctx.lineTo(animal.forces.xPos[i] + animal.forces.xF[i], animal.forces.xPos[i] + animal.forces.yF[i]);
+			$scope.ctx.lineTo(animal.forces.xPos[i] + animal.forces.xF[i] / 50, animal.forces.yPos[i] + animal.forces.yF[i] / 50);
 			$scope.ctx.stroke();
 		}
 		$scope.ctx.beginPath();
 		$scope.ctx.arc(animal.xMass, animal.yMass, $scope.simConfig.nodeSize / 2, 0, 2 * Math.PI);
 		$scope.ctx.fillStyle = $scope.simConfig.massColor;
 		$scope.ctx.fill();
+		$scope.ctx.beginPath();
+		$scope.ctx.moveTo(animal.xMass, animal.yMass);
+		$scope.ctx.lineTo(animal.xMass + animal.xAccForce / 50, animal.yMass + animal.yAccForce / 50);
+		$scope.ctx.strokeStyle = $scope.simConfig.forceColor;
+		$scope.ctx.stroke();
 	};
 	
 	sim.tick = function () {
@@ -96,24 +102,26 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		sim.flapChildren(animal.node, 0);
 		sim.calculateMassCenter(animal);
 		animal.resetForces();
-		sim.calculateFlapForce(animal.forces, animal.node, animal.xPos, animal.yPos);
+		sim.calculateFlapForce(animal);
+		//TODO: Make it so calculateFlapForce takes all children into consideration when a flap happens.
 		//TODO: Calculate forces from drag.
-		//TODO: Calculate new velocity from forces.
+		sim.calculateAcceleration(animal);
 		animal.xPos += animal.xVel;
 		animal.yPos += animal.yVel;
 	};
 	
-	sim.calculateFlapForce = function (accum, node, x, y) {
-		var i, conn, deltaX, deltaY;
+	sim.flapChildren = function (node, angleChange) {
+		var i, conn;
 		for (i = 0; i < node.children; i += 1) {
-			conn = node.connections[i];
-			deltaX = Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
-			deltaY = Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
-			accum.xPos.push(x + deltaX * Math.pow(1 / 2, 1 / 3));
-			accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
-			accum.xF.push(conn.expSign * Math.pow(conn.length, 3) * Math.pow(conn.expanding ? conn.expVel : conn.conVel, 2) * Math.cos(Math.PI / 2 - node.angle - conn.angle));
-			accum.yF.push(-conn.expSign * Math.pow(conn.length, 3) * Math.pow(conn.expanding ? conn.expVel : conn.conVel, 2) * Math.sin(Math.PI / 2 - node.angle - conn.angle));
-			sim.calculateFlapForce(accum, conn.node, x + deltaX, y + deltaY);
+			conn = node.connections[i]; //Creating an alias for the targeted connection
+			if (conn.frameCount === (conn.expanding ? conn.expFrames : conn.conFrames)) {
+				conn.expanding = !conn.expanding;
+				conn.frameCount = 0;
+			}
+			conn.frameCount += 1;
+			conn.angle += conn.expanding ? conn.expVel : conn.conVel;
+			conn.node.angle += angleChange + (conn.expanding ? conn.expVel : conn.conVel);
+			sim.flapChildren(conn.node, angleChange + (conn.expanding ? conn.expVel : conn.conVel));
 		}
 	};
 	
@@ -136,19 +144,38 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		animal.yMass = accum.y.reduce(function (a, b) {return a + b; }, 0) / accum.y.length;
 	};
 	
-	sim.flapChildren = function (node, angleChange) {
-		var i, conn;
-		for (i = 0; i < node.children; i += 1) {
-			conn = node.connections[i]; //Creating an alias for the targeted connection
-			if (conn.frameCount === (conn.expanding ? conn.expFrames : conn.conFrames)) {
-				conn.expanding = !conn.expanding;
-				conn.frameCount = 0;
+	sim.calculateFlapForce = function (animal) {
+		(function crawl(accum, node, x, y) {
+			var i, conn, deltaX, deltaY;
+			for (i = 0; i < node.children; i += 1) {
+				conn = node.connections[i];
+				deltaX = Math.cos(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+				deltaY = Math.sin(node.angle + conn.angle) * conn.length * $scope.simConfig.lengthScale;
+				accum.xPos.push(x + deltaX * Math.pow(1 / 2, 1 / 3));
+				accum.yPos.push(y + deltaY * Math.pow(1 / 2, 1 / 3));
+				accum.xF.push((conn.expanding ? 1 : -1) * conn.expSign * Math.pow(conn.length, 3) * Math.pow(conn.expanding ? conn.expVel : conn.conVel, 2) * Math.cos(Math.PI / 2 - node.angle - conn.angle));
+				accum.yF.push((conn.expanding ? -1 : 1) * conn.expSign * Math.pow(conn.length, 3) * Math.pow(conn.expanding ? conn.expVel : conn.conVel, 2) * Math.sin(Math.PI / 2 - node.angle - conn.angle));
+				crawl(accum, conn.node, x + deltaX, y + deltaY);
 			}
-			conn.frameCount += 1;
-			conn.angle += conn.expanding ? conn.expVel : conn.conVel;
-			conn.node.angle += angleChange + (conn.expanding ? conn.expVel : conn.conVel);
-			sim.flapChildren(conn.node, angleChange + (conn.expanding ? conn.expVel : conn.conVel));
+		}(animal.forces, animal.node, animal.xPos, animal.yPos));
+	};
+	
+	sim.calculateAcceleration = function (animal) {
+		var i, angle, m1, m2, f1, f2;
+		for (i = 0; i < animal.forces.xPos.length; i += 1) {
+			m1 = animal.xMass - animal.forces.xPos[i];
+			m2 = animal.yMass - animal.forces.yPos[i];
+			f1 = animal.forces.xF[i] - animal.forces.xPos[i];
+			f2 = animal.forces.yF[i] - animal.forces.yPos[i];
+			angle = Math.acos((m1 * f1 + m2 * f2) / Math.sqrt((m1 * m1 + m2 * m2) * (f1 * f1 + f2 * f2)));
+			animal.xAccForce += Math.cos(angle - Math.PI / 2) * animal.forces.xF[i];
+			animal.yAccForce += Math.cos(angle - Math.PI / 2) * animal.forces.yF[i];
+			
 		}
+		animal.xVel += $scope.simConfig.accConstant * animal.xAccForce;
+		animal.yVel += $scope.simConfig.accConstant * animal.yAccForce;
+		//TODO: Calculate new velocity from forces.
+		//TODO: Calculate rotation from forces.
 	};
 	
 	sim.animal = function () {
@@ -160,10 +187,18 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		this.xMass = 0;	//The x-wise center of mass.
 		this.yMass = 0;	//The y-wise center of mass.
 		this.forces = {xPos: [], yPos: [], xF: [], yF: []};
+		this.xAccForce = 0;
+		this.yAccForce = 0;
+		this.xRotForce = 0;
+		this.yRotForce = 0;
 	};
 	
 	sim.animal.prototype.resetForces = function () {
 		this.forces = {xPos: [], yPos: [], xF: [], yF: []};
+		this.xAccForce = 0;
+		this.yAccForce = 0;
+		this.xRotForce = 0;
+		this.yRotForce = 0;
 	};
 	
 	sim.node = function () {
@@ -209,9 +244,9 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 		connectionColor: "rgba(50,50,50,0.8)",
 		massColor: "rgba(255,0,0,1)",
 		forceColor: "rgba(255,0,255,1)",
-		maxFlapSpeed: 1, //Chosen arbitrarily, may likely need to change later.
 		nodeSize: 7,
 		lengthScale: 0.35,
+		accConstant: 0.000005,
 		showParticles: true
 	};
 	
@@ -220,12 +255,12 @@ angular.module('andrejson').controller('munchersController', function ($scope, $
 	 */
 	sim.init = function () {
 		sim.global.testAnimal = new sim.animal();
-		sim.global.testAnimal.node.addChild(new sim.connection(0, 1, 6, 10, 100));
-		sim.global.testAnimal.node.addChild(new sim.connection(Math.PI, Math.PI - 1, 6, 10, 100));
-		sim.global.testAnimal.node.connections[0].node.addChild(new sim.connection(0, 0.3, 6, 10, 100));
+		sim.global.testAnimal.node.addChild(new sim.connection(0, Math.PI / 2, 6, 10, 100));
+		sim.global.testAnimal.node.addChild(new sim.connection(Math.PI, Math.PI / 2, 6, 10, 100));
+		/*sim.global.testAnimal.node.connections[0].node.addChild(new sim.connection(0, 0.3, 6, 10, 100));
 		sim.global.testAnimal.node.connections[1].node.addChild(new sim.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
 		sim.global.testAnimal.node.connections[0].node.connections[0].node.addChild(new sim.connection(0, 0.3, 6, 10, 100));
-		sim.global.testAnimal.node.connections[1].node.connections[0].node.addChild(new sim.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));
+		sim.global.testAnimal.node.connections[1].node.connections[0].node.addChild(new sim.connection(Math.PI, Math.PI - 0.3, 6, 10, 100));*/
 		sim.global.stamp = Date.now();
 		sim.global.frameStamp = Date.now();
 		sim.global.tickStamp = Date.now();
